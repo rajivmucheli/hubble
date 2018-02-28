@@ -1,13 +1,13 @@
 from .ReportDaily import *
 
-# Lists how many users pushed commits vs. how many used a seat in the last day, week, and month
+# Lists how many users pushed commits vs. how many used a seat in the last day, week, and four weeks
 class ReportUsers(ReportDaily):
 	def name(self):
 		return "users"
 
 	def updateDailyData(self):
 		newHeader, newData = self.parseData(
-			self.executeQuery(self.query(self.yesterday()))
+			self.executeQuery(self.query())
 		)
 		self.header = newHeader if newHeader else self.header
 		self.data.extend(newData)
@@ -41,21 +41,22 @@ class ReportUsers(ReportDaily):
 		return query
 
 	# Collects the number of pushing users and users using a seat
-	def query(self, date):
-		# Also compute the stats for a 7-day and a 30-day period
-		sevenDaysEarlier = date - datetime.timedelta(6)
-		thirtyDaysEarlier = date - datetime.timedelta(29)
+	def query(self):
+		oneDayAgo = self.yesterday()
+		oneWeekAgo = self.daysAgo(7)
+		fourWeeksAgo = self.daysAgo(28)
+
 		query = '''
 			SELECT
-				"''' + str(date) + '''" AS date,
+				"''' + str(oneDayAgo) + '''" AS date,
 				usersPushingYesterday.count AS "pushing commits (last day)",
 				usersPushingLastWeek.count AS "pushing commits (last week)",
-				usersPushingLastMonth.count AS "pushing commits (last month)",
+				usersPushingLastFourWeeks.count AS "pushing commits (last four weeks)",
 				usersUsingSeat.count AS "using license"
 			FROM
-				(''' + self.usersPushingSubquery([date, date]) + ''') AS usersPushingYesterday,
-				(''' + self.usersPushingSubquery([sevenDaysEarlier, date]) + ''') AS usersPushingLastWeek,
-				(''' + self.usersPushingSubquery([thirtyDaysEarlier, date]) + ''') AS usersPushingLastMonth,
+				(''' + self.usersPushingSubquery([oneDayAgo, oneDayAgo]) + ''') AS usersPushingYesterday,
+				(''' + self.usersPushingSubquery([oneWeekAgo, oneDayAgo]) + ''') AS usersPushingLastWeek,
+				(''' + self.usersPushingSubquery([fourWeeksAgo, oneDayAgo]) + ''') AS usersPushingLastFourWeeks,
 				(''' + self.usersUsingSeatSubquery() + ''') AS usersUsingSeat
 		'''
 		return query
