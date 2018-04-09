@@ -429,7 +429,7 @@ function createHistoryChart(canvas, actionBar)
 
                     // The date range is of the form [t0, t1), inclusive of t0 but exclusive of t1.
                     // Hence, subtract one second from t1 to obtain the previous date in UTC
-                    let t1 = dateRange[1];
+                    let t1 = new Date(dateRange[1].valueOf());
                     t1.setSeconds(t1.getSeconds() - 1);
 
                     return formatDate(dateRange[0]) + ' to ' + formatDate(t1) + suffix;
